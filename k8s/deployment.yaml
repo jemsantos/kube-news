@@ -1,0 +1,85 @@
+# define o grupo de API
+apiVersion: apps/v1
+
+# tipo de objeto
+kind: Deployment
+
+# metadados do objeto
+metadata:
+  name: postgre
+
+# especificaçao do objeto
+spec:
+  selector:
+    matchLabels:
+      app: postgre
+  template:
+    metadata:
+      labels:
+        app: postgre
+    spec:
+      containers:
+        - name: postgre
+          image: postgres:13.13
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              value: pg1234
+            - name: POSTGRES_USER
+              value: kubenews
+            - name: POSTGRES_DB
+              value: kubenews
+---
+# inicio nova especificação
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgre
+espec:
+  selector:
+    app: postgre
+  ports:
+    - port: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubenews
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: kubenews
+  template:
+    metadata:
+      labels:
+        app: kubenews
+    spec:
+      containers:
+        - name: kubenews
+          image: jemsantos/kube-news:v1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_DATABASE
+              value: kubenews
+            - name: DB_USERNAME
+              value: kubenews
+            - name: DB_PASSWORD
+              value: pg1234
+            - name: DB_HOST
+              value: postgre
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubenews
+espec:
+  selector:
+    app: kubenews
+  ports:
+    - port: 80
+      targetPort: 8080
+      nodePort: 30000
+  type: NodePort

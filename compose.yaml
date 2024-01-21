@@ -1,0 +1,39 @@
+# nova versão do compose (16/01/2024)
+## docker compose up
+## docker compose down
+## docker compose up -d --build (realizar o build da imagem qdo preciso)
+
+services:
+  postgre:
+    image: postgres:13.13
+    ports:
+      - 5432:5432
+    networks:
+      - kubenews_net
+    environment:
+      POSTGRES_PASSWORD: pg1234
+      POSTGRES_USER: kubenews
+      POSTGRES_DB: kubenews
+
+  kubenews:
+    # image: fabricioveronez/kube-news:v1
+    image: jemsantos/kube-news:v1
+    restart: always
+    depends_on:
+      - postgre
+    build:
+      context: ./src
+      dockerfile: ./Dockerfile
+    ports:
+      - 8080:8080
+    networks:
+      - kubenews_net
+    environment:
+      DB_DATABASE: kubenews
+      DB_USERNAME: kubenews
+      DB_PASSWORD: pg1234
+      DB_HOST: postgre
+
+networks:
+  kubenews_net:
+    driver: bridge
